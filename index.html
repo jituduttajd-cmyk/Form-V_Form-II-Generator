@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Form-V / Form-II Generator</title>
+<meta name="theme-color" content="#008080">
+<meta name="description" content="Upload the Excel format file and generate Form-V (PTD, PTR) or Form-II (Pre-Revised PTR, Revised PTR).">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Form Generator">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23008080'/%3E%3Ctext x='32' y='44' font-size='34' font-family='Arial' font-weight='700' fill='white' text-anchor='middle'%3E%E2%82%B9%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#f4f7f7;--card:#fff;--ink:#12292b;--muted:#5d7476;--line:#dbe5e5;
+  --teal:#008080;--teal-d:#005f5f;--teal-l:#e0f2f2;--amber:#b45309;--amber-l:#fef3c7;--red:#b91c1c;--red-l:#fee2e2;
+  --new:#fff7e0;--new-h:#c26a00;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0e1a1b;--card:#152426;--ink:#e6f1f1;--muted:#93aeb0;--line:#26403f;--teal:#2bb3b3;--teal-d:#1f8f8f;--teal-l:#12383a;
+  --amber:#fbbf24;--amber-l:#3a2d0c;--red:#fca5a5;--red-l:#3b1616;--new:#33290f;--new-h:#e58a1f}
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+header{background:var(--teal);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{font-size:18px;margin:0;font-weight:650;flex:1;min-width:200px}
+header small{opacity:.85;font-weight:400;display:block;font-size:12px}
+.badge{font-size:12px;padding:3px 10px;border-radius:99px;background:rgba(255,255,255,.2)}
+.badge.off{background:#b45309}
+#installBtn{display:none;background:#fff;color:var(--teal-d);border:0;padding:6px 14px;border-radius:8px;font-weight:600;cursor:pointer}
+main{max-width:1200px;margin:0 auto;padding:18px 16px 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+h2{font-size:14px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0 0 12px;font-weight:650}
+#drop{border:2px dashed var(--teal);border-radius:12px;padding:30px 16px;text-align:center;cursor:pointer;background:var(--teal-l);transition:.15s}
+#drop.over{background:var(--card);transform:scale(1.005)}
+#drop b{color:var(--teal-d)}
+@media (prefers-color-scheme:dark){#drop b{color:var(--teal)}}
+#drop p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.file{display:none;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;font-size:14px}
+.file .name{font-weight:600;word-break:break-all}
+select,button{font:inherit}
+select{padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.link{background:none;border:0;color:var(--teal-d);text-decoration:underline;cursor:pointer;padding:0}
+@media (prefers-color-scheme:dark){.link{color:var(--teal)}}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tab{border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:14px;text-align:left;cursor:pointer;transition:.15s}
+.tab b{display:block;font-size:17px}
+.tab span{font-size:13px;color:var(--muted)}
+.tab:disabled{opacity:.5;cursor:not-allowed}
+.tab.active{border-color:var(--teal);background:var(--teal-l)}
+.formulas{margin-top:14px;display:grid;gap:6px}
+.formulas code{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:12.5px ui-monospace,Menlo,Consolas,monospace;overflow-x:auto;white-space:nowrap;display:block}
+.formulas em{font-style:normal;font-weight:650;color:var(--new-h)}
+.bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.bar .grow{flex:1}
+.btn{background:var(--teal);color:#fff;border:0;border-radius:10px;padding:10px 18px;font-weight:650;cursor:pointer}
+.btn:hover{background:var(--teal-d)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.stat{font-size:13px;color:var(--muted)}
+.msg{border-radius:10px;padding:10px 12px;font-size:13.5px;margin-bottom:12px;display:none}
+.msg.warn{background:var(--amber-l);color:var(--amber);display:block}
+.msg.err{background:var(--red-l);color:var(--red);display:block}
+.wrap{overflow:auto;max-height:62vh;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);white-space:nowrap}
+th{position:sticky;top:0;background:var(--teal);color:#fff;text-align:center;font-weight:650;z-index:1}
+th.new{background:var(--new-h)}
+td.new{background:var(--new);font-weight:600}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+td.dash{color:var(--muted);text-align:center}
+tr:hover td{background:var(--teal-l)}
+td.v-ok{background:#d9f2df;color:#0b5d1e;font-weight:600}
+td.v-bad{background:#fbd5d5;color:#9b1c1c;font-weight:700}
+td.v-na{background:#fdf0c4;color:#8a5a00}
+@media (prefers-color-scheme:dark){td.v-ok{background:#12351d;color:#7ee29a}td.v-bad{background:#4a1616;color:#ff9c9c}td.v-na{background:#3a2d0c;color:#fbd56a}}
+tr.grp td{background:var(--teal-l);color:var(--teal-d);font-weight:700;text-align:left;position:sticky;left:0}
+@media (prefers-color-scheme:dark){tr.grp td{color:var(--teal)}}
+footer{max-width:1200px;margin:0 auto;padding:0 16px 30px;color:var(--muted);font-size:12.5px}
+#empty{color:var(--muted);text-align:center;padding:20px}
+@media (max-width:560px){.tabs{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Form-V / Form-II Generator<small>Upload the Excel format file &rarr; choose Form-V or Form-II &rarr; download</small></h1>
+  <span id="net" class="badge">Online</span>
+  <button id="installBtn" type="button">Install app</button>
+</header>
+
+<main>
+  <section class="card">
+    <h2>1 &middot; Upload Excel file</h2>
+    <div id="drop" tabindex="0" role="button" aria-label="Choose Excel file">
+      <b>Tap to choose</b> or drag &amp; drop your .xlsx / .xls file here
+      <p>Works fully in your browser &mdash; nothing is uploaded anywhere.</p>
+    </div>
+    <input id="file" type="file" accept=".xlsx,.xlsm,.xls,.csv" hidden>
+    <div class="file" id="fileInfo">
+      <span>&#128196; <span class="name" id="fileName"></span></span>
+      <label>Sheet: <select id="sheetSel"></select></label>
+      <button class="link" id="changeFile" type="button">Change file</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>2 &middot; Choose output</h2>
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-form="V" role="tab" disabled><b>Form-V</b><span>Adds <strong>PTD</strong> &amp; <strong>PTR</strong> after Pack Size</span></button>
+      <button class="tab" data-form="II" role="tab" disabled><b>Form-II</b><span>Adds <strong>Pre-Revised PTR</strong> &amp; <strong>Revised PTR</strong> after Pack Size</span></button>
+    </div>
+    <div class="formulas" id="formulas"></div>
+  </section>
+
+  <section class="card">
+    <h2>3 &middot; Preview &amp; download</h2>
+    <div class="bar">
+      <button class="btn" id="dl" type="button" disabled>&#11015; Download Excel</button>
+      <button class="btn" id="dlPdf" type="button" disabled style="background:#c26a00">&#128462; Download PDF</button>
+      <span class="stat grow" id="stat">No file loaded yet.</span>
+    </div>
+    <div class="msg" id="msg"></div>
+    <div class="wrap" id="wrap"><div id="empty">Upload a file to see the preview.</div></div>
+  </section>
+</main>
+
+<footer>
+  The downloaded Excel and PDF contain calculated values only (no formulas). Validation Status column checks that Revised MRP is not more than 10% above Pre-Revised MRP. Products are grouped vendor-wise (A&ndash;Z) and sorted A&ndash;Z within each vendor; Sl. No restarts for every vendor.
+  Where Revised/Pre-Revised MRP or GST% is blank or not a number (e.g. "-"), the result shows "-" instead of an error.
+  <br>Offline mode: <button class="link" id="getSw" type="button">download sw.js</button> and keep it in the same folder as this file when hosting over HTTPS.
+</footer>
+
+<script type="text/plain" id="swSrc">
+const CACHE='form-generator-v1';
+self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./'])).then(()=>self.skipWaiting()).catch(()=>self.skipWaiting()))});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==CACHE).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
+self.addEventListener('fetch',e=>{
+  if(e.request.method!=='GET')return;
+  e.respondWith(caches.match(e.request).then(hit=>{
+    const net=fetch(e.request).then(res=>{
+      if(res&&(res.ok||res.type==='opaque')){const cp=res.clone();caches.open(CACHE).then(c=>c.put(e.request,cp));}
+      return res;
+    }).catch(()=>hit||(e.request.mode==='navigate'?caches.match('./'):undefined));
+    return hit||net;
+  }));
+});
+</script>
+
+<script>
+/* ---------- Library loader (styled-XLSX build first, plain SheetJS as fallback) ---------- */
+const LIBS=[
+  'https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'
+];
+function loadLib(i=0){
+  return new Promise((res,rej)=>{
+    if(i>=LIBS.length)return rej(new Error('Could not load the Excel library. Please check your internet connection (needed on first use).'));
+    const s=document.createElement('script');
+    s.src=LIBS[i];
+    s.onload=()=>res();
+    s.onerror=()=>loadLib(i+1).then(res,rej);
+    document.head.appendChild(s);
+  });
+}
+const libReady=loadLib();
+
+/* ---------- Helpers ---------- */
+const $=id=>document.getElementById(id);
+const norm=s=>String(s==null?'':s).toLowerCase().replace(/[^a-z0-9]/g,'');
+const keyOf=h=>{const n=norm(h);return n.startsWith('gst')?'gst':n;};
+const isNum=v=>typeof v==='number'&&isFinite(v);
+const num=v=>{
+  if(isNum(v))return v;
+  if(typeof v==='string'){const t=v.trim().replace(/,/g,'');if(t!==''&&isFinite(+t))return +t;}
+  return null;
+};
+const r2=x=>{ // Excel-style ROUND(x,2): half away from zero
+  const a=Math.abs(x),s=x<0?-1:1;
+  const t=Number(Math.round(a+'e2')+'e-2');
+  return s*(isFinite(t)?t:Math.round(a*100)/100);
+};
+const calcPTR=(mrp,gst)=>r2(mrp/(1+gst/100)*(1-20/100));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const isSerial=v=>isNum(v)&&v>20000&&v<80000;
+const fmtDate=sn=>{const d=new Date(Math.round((sn-25569)*864e5));return MON[d.getUTCMonth()]+'/'+String(d.getUTCFullYear()).slice(2);};
+const DROP=new Set(['ptd','ptr','prerevisedptr','revisedptr','validationstatus']); // existing output columns in the template are rebuilt
+const MONEY=new Set(['prerevisedmrp','revisedmrp']);
+
+const FORMS={
+  V:{name:'Form-V',need:['packsize','prerevisedmrp','revisedmrp','gst'],newCols:[['PTD','ptd'],['PTR','ptr']]},
+  II:{name:'Form-II',need:['packsize','prerevisedmrp','revisedmrp','gst'],newCols:[['Pre-Revised PTR','prerevisedptr'],['Revised PTR','revisedptr']]}
+};
+const NICE={packsize:'Pack Size',prerevisedmrp:'Pre-Revised MRP',revisedmrp:'Revised MRP',gst:'GST%'};
+
+/* ---------- Validation: Revised MRP must not exceed Pre-Revised MRP by more than 10% ---------- */
+const MAX_INC=10;
+function validate(pre,rev){
+  if(!isNum(pre)||pre<=0)return'Not validated (Pre-Revised MRP n/a)';
+  if(!isNum(rev))return'Not validated (Revised MRP n/a)';
+  const pct=(rev-pre)/pre*100;
+  if(rev>pre*(1+MAX_INC/100)+1e-9)return'Invalid - Increase '+pct.toFixed(2)+'% (max '+MAX_INC+'%)';
+  return pct>0?'Valid (+'+pct.toFixed(2)+'%)':'Valid ('+pct.toFixed(2)+'%)';
+}
+const vClass=t=>t.startsWith('Valid')?'ok':t.startsWith('Invalid')?'bad':'na';
+
+/* ---------- State ---------- */
+const S={wb:null,base:'',sheet:'',form:'V',model:null,cache:{}};
+
+/* ---------- Parse a sheet ---------- */
+function parseSheet(name){
+  if(S.cache[name])return S.cache[name];
+  const ws=S.wb.Sheets[name];
+  const aoa=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null,blankrows:false});
+  let h=-1;
+  for(let i=0;i<Math.min(aoa.length,20);i++){
+    const n=(aoa[i]||[]).map(keyOf);
+    if(n.includes('revisedmrp')&&n.includes('packsize')){h=i;break;}
+  }
+  let out;
+  if(h<0){
+    // header not found – still report which columns exist (best effort)
+    const hdr=(aoa[0]||[]).map(keyOf);
+    out={cols:[],rows:[],keys:hdr,found:false};
+  }else{
+    const cols=[];
+    aoa[h].forEach((lab,idx)=>{
+      if(lab==null||String(lab).trim()==='')return;
+      const key=keyOf(lab);
+      if(DROP.has(key))return;
+      cols.push({label:String(lab).trim(),key,idx});
+    });
+    const pIdx=aoa[h].findIndex(x=>keyOf(x)==='productname');
+    const rows=aoa.slice(h+1).filter(r=>{
+      if(!r)return false;
+      const first=r.find(v=>v!=null&&String(v).trim()!=='');
+      if(first==null)return false;
+      if(/formula\s*-/i.test(String(r[0]||'')))return false; // notes under the table
+      return pIdx>=0?(r[pIdx]!=null&&String(r[pIdx]).trim()!==''):true;
+    });
+    out={cols,rows,keys:cols.map(c=>c.key),found:true};
+  }
+  return S.cache[name]=out;
+}
+
+/* ---------- Build the Form model ---------- */
+function build(parsed,form){
+  const F=FORMS[form];
+  const missing=F.need.filter(k=>!parsed.keys.includes(k)).map(k=>NICE[k]);
+  if(missing.length)return{error:'This sheet is missing required column(s): '+missing.join(', ')+'.'};
+  const cols=[];
+  parsed.cols.forEach(c=>{
+    cols.push({label:c.label,key:c.key,src:c.idx});
+    if(c.key==='packsize')F.newCols.forEach(([label,key])=>cols.push({label,key,isNew:true}));
+  });
+  cols.push({label:'Validation Status',key:'validation',isVal:true});
+  const ix=k=>cols.findIndex(c=>c.key===k);
+  const iG=ix('gst'),iR=ix('revisedmrp'),iP=ix('prerevisedmrp');
+  let bad=0;const vc={ok:0,bad:0,na:0};
+  const rows=parsed.rows.map(r=>{
+    const row=cols.map(c=>{
+      if(c.isNew||c.isVal)return null;
+      let v=r[c.src];if(v===undefined)v=null;
+      if(MONEY.has(c.key)||c.key==='gst'){const n=num(v);return n===null?v:n;}
+      return v;
+    });
+    const ptrFor=mrp=>(isNum(mrp)&&isNum(row[iG]))?calcPTR(mrp,row[iG]):'-';
+    if(form==='V'){
+      const ptr=ptrFor(row[iR]);
+      row[ix('ptr')]=ptr;
+      row[ix('ptd')]=isNum(ptr)?r2(ptr-ptr*0.10):'-';
+      if(!isNum(ptr))bad++;
+    }else{
+      const rev=ptrFor(row[iR]),pre=ptrFor(row[iP]);
+      row[ix('revisedptr')]=rev;row[ix('prerevisedptr')]=pre;
+      if(!isNum(rev)||!isNum(pre))bad++;
+    }
+    const vt=validate(row[iP],row[iR]);row[ix('validation')]=vt;vc[vClass(vt)]++;
+    return row;
+  });
+  // Vendor-wise (A-Z) grouping, products A-Z inside each vendor, Sl. No restarted per vendor
+  const iV=ix('vendorname'),iN=ix('productname'),iS=ix('slno');
+  const grouped=iV>=0;
+  const cmp=(a,b)=>String(a==null?'':a).trim().localeCompare(String(b==null?'':b).trim(),undefined,{sensitivity:'base',numeric:true});
+  const vk=r=>grouped&&r[iV]!=null&&String(r[iV]).trim()!==''?String(r[iV]).trim().replace(/\s+/g,' ').toUpperCase():'';
+  const map=new Map();
+  rows.forEach(r=>{const k=vk(r);if(grouped&&k)r[iV]=k;if(!map.has(k))map.set(k,[]);map.get(k).push(r);});
+  const groups=[...map.entries()].sort((a,b)=>a[0]===''?1:b[0]===''?-1:cmp(a[0],b[0])).map(([k,rs])=>{
+    if(iN>=0)rs.sort((a,b)=>cmp(a[iN],b[iN]));
+    if(iS>=0)rs.forEach((r,i)=>r[iS]=i+1);
+    return{vendor:k||'(No vendor)',rows:rs};
+  });
+  return{form,cols,groups,grouped,rows:groups.flatMap(g=>g.rows),bad,vc,iG,iR,iP};
+}
+
+/* ---------- Render preview ---------- */
+function fmtCell(c,v){
+  if(v==null||v==='')return['',''];
+  if(c.isVal)return[v,'v-'+vClass(v)];
+  if(v==='-')return['-','dash'];
+  if(c.key==='mfgdate'&&isSerial(v))return[fmtDate(v),''];
+  if(c.isNew||MONEY.has(c.key))return isNum(v)?[v.toFixed(2),'num']:[v,'dash'];
+  if(isNum(v))return[String(v),'num'];
+  return[String(v),''];
+}
+function render(){
+  const msg=$('msg');msg.className='msg';msg.textContent='';
+  const sName=S.sheet;
+  const F=FORMS[S.form];
+  // formulas box
+  const m=NICE;
+  $('formulas').innerHTML=(S.form==='V'
+    ?'<code><em>PTR</em> = ROUND( Revised MRP / (1 + GST% / 100) * (1 - 20/100) , 2 )</code><code><em>PTD</em> = ROUND( PTR - ( PTR * 10% ) , 2 )</code>'
+    :'<code><em>Revised PTR</em> = ROUND( Revised MRP / (1 + GST% / 100) * (1 - 20/100) , 2 )</code><code><em>Pre-Revised PTR</em> = ROUND( Pre-Revised MRP / (1 + GST% / 100) * (1 - 20/100) , 2 )</code><code><em>Validation</em>: Revised MRP must not exceed Pre-Revised MRP by more than 10%  (Revised \u2264 Pre-Revised \u00D7 1.10)</code>');
+  if(!S.wb)return;
+  const parsed=parseSheet(sName);
+  const model=build(parsed,S.form);
+  S.model=model.error?null:model;
+  $('dl').disabled=!S.model;$('dlPdf').disabled=!S.model;
+  if(model.error){
+    msg.className='msg err';msg.textContent=model.error+' Pick another sheet or check the column headings.';
+    $('wrap').innerHTML='<div id="empty">Nothing to preview.</div>';$('stat').textContent='';return;
+  }
+  $('stat').textContent=model.rows.length+' product rows'+(model.grouped?' in '+model.groups.length+' vendor group(s)':'')+' \u2022 '+F.name+' \u2022 sheet "'+sName+'"';
+  const notes=[];
+  if(model.vc.bad)notes.push('\u26A0 '+model.vc.bad+' product(s) FAIL validation: Revised MRP is more than '+MAX_INC+'% above Pre-Revised MRP.');
+  if(model.vc.na)notes.push(model.vc.na+' product(s) could not be validated (Pre-Revised or Revised MRP blank / non-numeric / zero).');
+  if(model.bad)notes.push(model.bad+' row(s) have a blank / non-numeric MRP or GST% \u2013 those price cells are shown as "-".');
+  if(notes.length){msg.className='msg '+(model.vc.bad?'err':'warn');msg.innerHTML=notes.map(esc).join('<br>');}
+  $('stat').textContent+=' \u2022 Validation: '+model.vc.ok+' valid, '+model.vc.bad+' invalid, '+model.vc.na+' not validated';
+  const LIMIT=500;let shown=0;
+  let h='<table><thead><tr>'+model.cols.map(c=>'<th class="'+(c.isNew?'new':'')+'">'+esc(c.label)+'</th>').join('')+'</tr></thead><tbody>';
+  for(const g of model.groups){
+    if(shown>=LIMIT)break;
+    if(model.grouped)h+='<tr class="grp"><td colspan="'+model.cols.length+'">Vendor: '+esc(g.vendor)+' &nbsp;('+g.rows.length+' item'+(g.rows.length>1?'s':'')+')</td></tr>';
+    for(const r of g.rows){
+      if(shown++>=LIMIT)break;
+      h+='<tr>'+model.cols.map((c,j)=>{const[t,cls]=fmtCell(c,r[j]);return'<td class="'+(c.isNew?'new ':'')+cls+'">'+esc(t)+'</td>';}).join('')+'</tr>';
+    }
+  }
+  h+='</tbody></table>';
+  $('wrap').innerHTML=h;
+  if(model.rows.length>LIMIT)$('stat').textContent+=' (preview shows first '+LIMIT+'; download has all)';
+}
+
+/* ---------- Export ---------- */
+function exportXlsx(){
+  const M=S.model;if(!M)return;
+  const L=XLSX.utils.encode_col;
+  const thin={style:'thin',color:{rgb:'BFBFBF'}};
+  const border={top:thin,bottom:thin,left:thin,right:thin};
+  const ws={};const nCols=M.cols.length;
+  M.cols.forEach((c,j)=>{
+    ws[L(j)+'1']={t:'s',v:c.label,s:{font:{bold:true,color:{rgb:'FFFFFF'}},
+      fill:{patternType:'solid',fgColor:{rgb:c.isNew?'C26A00':'008080'}},
+      alignment:{horizontal:'center',vertical:'center',wrapText:true},border}};
+  });
+  const widths=M.cols.map(c=>c.label.length+2);
+  const merges=[];let r=2;
+  M.groups.forEach(g=>{
+    if(M.grouped){
+      ws['A'+r]={t:'s',v:'Vendor: '+g.vendor+'  ('+g.rows.length+' item'+(g.rows.length>1?'s':'')+')',
+        s:{font:{bold:true,color:{rgb:'005F5F'}},fill:{patternType:'solid',fgColor:{rgb:'E0F2F2'}},alignment:{horizontal:'left'},border}};
+      for(let j=1;j<nCols;j++)ws[L(j)+r]={t:'s',v:'',s:{fill:{patternType:'solid',fgColor:{rgb:'E0F2F2'}},border}};
+      merges.push({s:{r:r-1,c:0},e:{r:r-1,c:nCols-1}});r++;
+    }
+    g.rows.forEach(row=>{
+      M.cols.forEach((c,j)=>{
+        const v=row[j],addr=L(j)+r;let cell;
+        if(v==null||v===''){cell={t:'z',s:{border}};}
+        else if(c.isVal){
+          const k=vClass(v),pal={ok:['C6EFCE','006100'],bad:['FFC7CE','9C0006'],na:['FFEB9C','9C5700']}[k];
+          cell={t:'s',v:String(v),s:{border,font:{bold:k!=='na',color:{rgb:pal[1]}},fill:{patternType:'solid',fgColor:{rgb:pal[0]}}}};
+        }else if(c.isNew){ // values only – no formulas in the output file
+          cell=isNum(v)?{t:'n',v,z:'0.00'}:{t:'s',v:String(v)};
+          cell.s={border,alignment:{horizontal:'right'},font:{bold:true},fill:{patternType:'solid',fgColor:{rgb:'FFF7E0'}}};
+        }else if(c.key==='mfgdate'&&isSerial(v)){cell={t:'n',v,z:'mmm/yy',s:{border,alignment:{horizontal:'center'}}};}
+        else if(isNum(v)){cell={t:'n',v,s:{border}};if(MONEY.has(c.key))cell.z='0.00';}
+        else cell={t:'s',v:String(v),s:{border}};
+        ws[addr]=cell;
+        if(!(v==null||v==='')){const len=String(isNum(v)&&(c.isNew||MONEY.has(c.key))?v.toFixed(2):v).length;if(len+2>widths[j])widths[j]=Math.min(len+2,45);}
+      });
+      r++;
+    });
+  });
+  ws['!ref']='A1:'+L(nCols-1)+(r-1);
+  ws['!cols']=widths.map(w=>({wch:Math.max(8,w)}));
+  ws['!rows']=[{hpt:30}];
+  if(merges.length)ws['!merges']=merges;
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,FORMS[M.form].name);
+  const buf=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+  saveBlob(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),FORMS[M.form].name+'_'+S.base+'.xlsx');
+}
+
+/* ---------- PDF ---------- */
+const PDF_LIBS=['https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js','https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js'];
+let pdfReady=null;
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;
+  s.onerror=()=>rej(new Error('Could not load the PDF library. Please check your internet connection (needed on first use).'));document.head.appendChild(s);});}
+function loadPdf(){return pdfReady||(pdfReady=loadScript(PDF_LIBS[0]).then(()=>loadScript(PDF_LIBS[1])).catch(e=>{pdfReady=null;throw e;}));}
+async function exportPdf(){
+  const M=S.model;if(!M)return;
+  await loadPdf();
+  const doc=new window.jspdf.jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  const n=M.cols.length,F=FORMS[M.form];
+  const body=[];
+  M.groups.forEach(g=>{
+    if(M.grouped)body.push([{content:'Vendor: '+g.vendor+'   ('+g.rows.length+' item'+(g.rows.length>1?'s':'')+')',colSpan:n,
+      styles:{fillColor:[224,242,242],textColor:[0,95,95],fontStyle:'bold',halign:'left'}}]);
+    g.rows.forEach(r=>body.push(r.map((v,j)=>fmtCell(M.cols[j],v)[0])));
+  });
+  const colStyles={};
+  M.cols.forEach((c,j)=>{
+    const st={};
+    if(c.isNew){st.fillColor=[255,247,224];st.fontStyle='bold';st.halign='right';}
+    else if(MONEY.has(c.key)||c.key==='gst')st.halign='right';
+    else if(c.key==='slno'||c.key==='mfgdate')st.halign='center';
+    colStyles[j]=st;
+  });
+  const today=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  doc.setFontSize(14);doc.setTextColor(0,95,95);doc.text(F.name,14,12);
+  doc.setFontSize(9);doc.setTextColor(90,90,90);
+  doc.text(S.base+'  |  Generated '+today+'  |  '+M.rows.length+' products'+(M.grouped?' in '+M.groups.length+' vendor group(s), sorted A-Z':'')+'  |  Validation: '+M.vc.ok+' valid, '+M.vc.bad+' invalid, '+M.vc.na+' not validated',14,17.5);
+  doc.autoTable({
+    head:[M.cols.map(c=>c.label)],body,startY:21,margin:{left:10,right:10,bottom:12},
+    styles:{fontSize:7,cellPadding:1.3,lineWidth:.1,lineColor:[191,191,191],overflow:'linebreak',valign:'middle'},
+    headStyles:{fillColor:[0,128,128],textColor:255,halign:'center',fontStyle:'bold'},
+    columnStyles:colStyles,
+    didParseCell:d=>{
+      const c=M.cols[d.column.index];if(!c||d.cell.colSpan>1)return;
+      if(d.section==='head'&&c.isNew)d.cell.styles.fillColor=[194,106,0];
+      if(d.section==='body'&&c.isVal){const k=vClass(String(d.cell.raw));
+        const pal={ok:[[198,239,206],[0,97,0]],bad:[[255,199,206],[156,0,6]],na:[[255,235,156],[156,87,0]]}[k];
+        d.cell.styles.fillColor=pal[0];d.cell.styles.textColor=pal[1];d.cell.styles.fontStyle=k==='na'?'normal':'bold';}
+    },
+    didDrawPage:()=>{const pg=doc.internal.getNumberOfPages();doc.setFontSize(8);doc.setTextColor(120);
+      doc.text('Page '+doc.internal.getCurrentPageInfo().pageNumber,doc.internal.pageSize.getWidth()-10,doc.internal.pageSize.getHeight()-5,{align:'right'});}
+  });
+  doc.save(F.name+'_'+S.base+'.pdf');
+}
+function saveBlob(blob,name){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
+}
+
+/* ---------- File handling ---------- */
+async function handleFile(f){
+  if(!f)return;
+  try{
+    await libReady;
+    const data=await f.arrayBuffer();
+    const wb=XLSX.read(data,{type:'array'});
+    if(!wb.SheetNames.length)throw new Error('The workbook has no sheets.');
+    S.wb=wb;S.cache={};S.base=f.name.replace(/\.[^.]+$/,'');
+    $('fileName').textContent=f.name;
+    $('sheetSel').innerHTML=wb.SheetNames.map(n=>'<option>'+esc(n)+'</option>').join('');
+    $('fileInfo').style.display='flex';
+    document.querySelectorAll('.tab').forEach(t=>t.disabled=false);
+    pickSheetForForm();
+    render();
+  }catch(e){
+    const msg=$('msg');msg.className='msg err';msg.textContent='Could not read the file: '+(e.message||e);
+  }
+}
+function pickSheetForForm(){
+  if(!S.wb)return;
+  const names=S.wb.SheetNames;
+  const want=S.form==='V'?/form(v|5)(?!i)/:/form(ii|2)/;
+  let hit=names.find(n=>want.test(norm(n)));
+  if(!hit){ // else first sheet that has the needed columns
+    hit=names.find(n=>{const p=parseSheet(n);return p.found&&FORMS[S.form].need.every(k=>p.keys.includes(k));});
+  }
+  S.sheet=hit||names[0];
+  $('sheetSel').value=S.sheet;
+}
+
+/* ---------- Wire up UI ---------- */
+const drop=$('drop'),fileIn=$('file');
+drop.addEventListener('click',()=>fileIn.click());
+drop.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fileIn.click();}});
+$('changeFile').addEventListener('click',()=>fileIn.click());
+fileIn.addEventListener('change',()=>{handleFile(fileIn.files[0]);fileIn.value='';});
+['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over');}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over');}));
+drop.addEventListener('drop',e=>handleFile(e.dataTransfer.files[0]));
+window.addEventListener('dragover',e=>e.preventDefault());
+window.addEventListener('drop',e=>{if(e.target!==drop&&!drop.contains(e.target)){e.preventDefault();handleFile(e.dataTransfer.files[0]);}});
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===t));
+  S.form=t.dataset.form;pickSheetForForm();render();
+}));
+$('sheetSel').addEventListener('change',e=>{S.sheet=e.target.value;render();});
+$('dl').addEventListener('click',async()=>{try{await libReady;exportXlsx();}catch(e){alert(e.message||e);}});
+$('dlPdf').addEventListener('click',async()=>{const b=$('dlPdf');b.disabled=true;try{await exportPdf();}catch(e){alert(e.message||e);}b.disabled=!S.model;});
+render();
+
+/* ---------- PWA: manifest (inline), icons, install, service worker ---------- */
+(function(){
+  function icon(size){
+    const c=document.createElement('canvas');c.width=c.height=size;
+    const g=c.getContext('2d');
+    g.fillStyle='#008080';g.fillRect(0,0,size,size);
+    g.fillStyle='#fff';g.font='700 '+Math.round(size*.6)+'px Arial,sans-serif';
+    g.textAlign='center';g.textBaseline='middle';g.fillText('\u20B9',size/2,size/2+size*.03);
+    return c.toDataURL('image/png');
+  }
+  const i192=icon(192),i512=icon(512);
+  const link=document.createElement('link');link.rel='apple-touch-icon';link.href=i192;document.head.appendChild(link);
+  const start=location.href.split('#')[0];
+  const manifest={
+    name:'Form-V / Form-II Generator',short_name:'Form Generator',
+    description:'Generate Form-V and Form-II from the Excel format file',
+    start_url:start,scope:start.replace(/[^/]*$/,''),display:'standalone',
+    background_color:'#f4f7f7',theme_color:'#008080',
+    icons:[{src:i192,sizes:'192x192',type:'image/png',purpose:'any'},{src:i512,sizes:'512x512',type:'image/png',purpose:'any'},
+           {src:i512,sizes:'512x512',type:'image/png',purpose:'maskable'}]
+  };
+  const ml=document.createElement('link');ml.rel='manifest';
+  ml.href=URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'}));
+  document.head.appendChild(ml);
+
+  let deferred=null;
+  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;$('installBtn').style.display='inline-block';});
+  $('installBtn').addEventListener('click',async()=>{if(!deferred)return;deferred.prompt();await deferred.userChoice;deferred=null;$('installBtn').style.display='none';});
+  window.addEventListener('appinstalled',()=>{$('installBtn').style.display='none';});
+
+  const net=()=>{const b=$('net');b.textContent=navigator.onLine?'Online':'Offline';b.classList.toggle('off',!navigator.onLine);};
+  window.addEventListener('online',net);window.addEventListener('offline',net);net();
+
+  if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
+    navigator.serviceWorker.register('sw.js').catch(()=>{}); // needs sw.js beside this file (optional)
+  }
+  $('getSw').addEventListener('click',()=>saveBlob(new Blob([$('swSrc').textContent.trim()+'\n'],{type:'text/javascript'}),'sw.js'));
+})();
+</script>
+</body>
+</html>
