@@ -204,7 +204,7 @@ function hasCategory(val,target){
 
 /* ---------- Validation: Revised MRP must not exceed Pre-Revised MRP by more than the row's Increase Limit % ---------- */
 function validate(pre,rev,limit,limitText){
-  if(!isNum(pre)||pre<=0)return'Not validated (Pre-Revised MRP n/a)';
+  if(!isNum(pre)||pre<=0)return'Not validated (Pre-Revised MRP N/A)';
   if(!isNum(rev))return'Not validated (Revised MRP n/a)';
   if(!isNum(limit))return'Not validated (Increase Limit n/a)';
   const pct=(rev-pre)/pre*100;
